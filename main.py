@@ -472,94 +472,94 @@ async def main():
 
 
 
-@app.get("/trending")
-async def main(pgno:int =1):
+# @app.get("/trending")
+# async def main(pgno:int =1):
 
-    return f("TRENDING_DESC",pgno)
+#     return f("TRENDING_DESC",pgno)
 
-@app.get('/trending/{pgno}/{type}')
-async def main(pgno:int,type:str):
+# @app.get('/trending/{pgno}/{type}')
+# async def main(pgno:int,type:str):
   
-   # https://api.consumet.org/meta/anilist/trending?page={page}&perPage={perPage}
-    if(type=="MOVIE"):
-      variables={"page":pgno,"type":"ANIME","format":["MOVIE"],"sort":"SCORE_DESC"}
-      return movie(variables)
-    else:
-      variables={"page":pgno,"type":"ANIME","format":[type],"sort":"SCORE_DESC"}
-    return movie(variables)
+#    # https://api.consumet.org/meta/anilist/trending?page={page}&perPage={perPage}
+#     if(type=="MOVIE"):
+#       variables={"page":pgno,"type":"ANIME","format":["MOVIE"],"sort":"SCORE_DESC"}
+#       return movie(variables)
+#     else:
+#       variables={"page":pgno,"type":"ANIME","format":[type],"sort":"SCORE_DESC"}
+#     return movie(variables)
 
 
 
-#   url =f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/advanced-search?provider=gogoanime&page={pgno}&perPage=25&sort=[%22SCORE_DESC%22]&format={type}&status=FINISHED"
-#   # response = requests.get('https://march-api1.vercel.app/meta/anilist/trending', params=params, headers=headers) 
-#   # url=f"https://march-api1.vercel.app/meta/anilist/trending?page={pgno}&provider=gogoanime"
+# #   url =f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/advanced-search?provider=gogoanime&page={pgno}&perPage=25&sort=[%22SCORE_DESC%22]&format={type}&status=FINISHED"
+# #   # response = requests.get('https://march-api1.vercel.app/meta/anilist/trending', params=params, headers=headers) 
+# #   # url=f"https://march-api1.vercel.app/meta/anilist/trending?page={pgno}&provider=gogoanime"
+# #   r=requests.get(url,headers=headers)
+# #   k=r.json()
+# #   return k
+
+# @app.get('/ongoing/{pgno}')
+# async def main(pgno:int):
+#   variables={"page":pgno,"type":"ANIME","status":"RELEASING","sort":"SCORE_DESC"}
+#   return movie(variables)
+
+
+# # https://api-consumet-org-two-opal.vercel.app/meta/anilist/advanced-search?provider=gogoanime&page=1&perPage=25&sort=[%22SCORE_DESC%22]&format=MOVIE&status=FINISHED
+
+
+# @app.get('/popular/{pgno}')
+# async def main(pgno:int=1):
+
+ 
+#    return f("POPULARITY_DESC",pgno)
+
+
+
+# @app.get('/latestep')
+# async def main(pgno:int =1):
+
+ 
+# #   url=f"https://api.consumet.org/meta/anilist/recent-episodes?page={pgno}provider=gogoanime&perPage=20"
+
+
+#   url=f"https://march-api1.vercel.app/meta/anilist/recent-episodes?page={pgno}&provider=gogoanime&perPage=20"
 #   r=requests.get(url,headers=headers)
 #   k=r.json()
 #   return k
 
-@app.get('/ongoing/{pgno}')
-async def main(pgno:int):
-  variables={"page":pgno,"type":"ANIME","status":"RELEASING","sort":"SCORE_DESC"}
-  return movie(variables)
 
 
-# https://api-consumet-org-two-opal.vercel.app/meta/anilist/advanced-search?provider=gogoanime&page=1&perPage=25&sort=[%22SCORE_DESC%22]&format=MOVIE&status=FINISHED
+
+# @app.get('/detail/{id}/{dub}')
+# async def main(id:int,dub: str):
+
+#  return det(id)
 
 
-@app.get('/popular/{pgno}')
-async def main(pgno:int=1):
 
+# @app.get('/watch/{str}')
+# async def main(str: str):
+
+# #   https://api.consumet.org/meta/anilist/watch/{episodeId}
+#   url=f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/watch/{str}"
  
-   return f("POPULARITY_DESC",pgno)
+#   # url=f"https://march-api1.vercel.app/meta/anilist/watch/{str}"
+#   r=requests.get(url,headers=headers)
+#   k=r.json()
+#   return k
 
 
 
-@app.get('/latestep')
-async def main(pgno:int =1):
-
+# @app.get('/random')
+# async def main():
+#   url=f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/random-anime"
  
-#   url=f"https://api.consumet.org/meta/anilist/recent-episodes?page={pgno}provider=gogoanime&perPage=20"
+#   r=requests.get(url,headers=headers)
+#   k=r.json()
+#   return k
 
-
-  url=f"https://march-api1.vercel.app/meta/anilist/recent-episodes?page={pgno}&provider=gogoanime&perPage=20"
-  r=requests.get(url,headers=headers)
-  k=r.json()
-  return k
-
-
-
-
-@app.get('/detail/{id}/{dub}')
-async def main(id:int,dub: str):
-
- return det(id)
-
-
-
-@app.get('/watch/{str}')
-async def main(str: str):
-
-#   https://api.consumet.org/meta/anilist/watch/{episodeId}
-  url=f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/watch/{str}"
- 
-  # url=f"https://march-api1.vercel.app/meta/anilist/watch/{str}"
-  r=requests.get(url,headers=headers)
-  k=r.json()
-  return k
-
-
-
-@app.get('/random')
-async def main():
-  url=f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/random-anime"
- 
-  r=requests.get(url,headers=headers)
-  k=r.json()
-  return k
-
-@app.get('/search/{query}/{pgno}')
-async def main(query:str,pgno:int):
-  return ser(query,pgno)
+# @app.get('/search/{query}/{pgno}')
+# async def main(query:str,pgno:int):
+#   return ser(query,pgno)
 
 # https://api-consumet-org-two-opal.vercel.app/meta/anilist/advanced-search?query=demon+slayer&page=1&perPage=25&type=ANIME
 @app.get('*')
