@@ -634,7 +634,7 @@ async def main(p: str = Query(..., description="M3U8 master playlist URL")):
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type")
 
-    except requests.exceptions.RequestException as e:
+  except requests.exceptions.RequestException as e:
          raise HTTPException(status_code=500, detail=f"Failed to fetch or process the file: {str(e)}")
 
 @app.get('*')
