@@ -1,6 +1,6 @@
 
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import PlainTextResponse
 import requests
 import json
 from starlette.middleware import Middleware
@@ -590,7 +590,10 @@ async def main(p: str = Query(..., description="M3U8 master playlist URL")):
 
   # print(f"{proxy_url}{p}")
   response = requests.get(f"{p}",headers=headers)
-  return response.text
+  return PlainTextResponse(
+            content=response.text, 
+            media_type="application/vnd.apple.mpegurl"
+        )
 
 @app.get('*')
 async def main():
