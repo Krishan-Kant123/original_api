@@ -1,10 +1,10 @@
-
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 import requests
 import json
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from urllib.parse import urljoin, urlencode
 
 middleware = [
     Middleware(
@@ -586,14 +586,56 @@ async def main(query:str,pgno:int):
 @app.get("/proxy")
 async def main(p: str = Query(..., description="M3U8 master playlist URL")):
   
-  # proxy_url = "https://m3u8-proxy-dnuse.amvstr.me/"
+  try:
+        # Fetch the content from the source
+      
+        response = requests.get(p, headers=headers, stream=True)
 
-  # print(f"{proxy_url}{p}")
-  response = requests.get(f"{p}",headers=headers)
-  return PlainTextResponse(
-            content=response.text, 
-            media_type="application/vnd.apple.mpegurl"
-        )
+        # Raise an error if the request fails
+        response.raise_for_status()
+
+        # If the requested URL is an M3U8 playlist
+        if p.endswith(".m3u8"):
+            original_base_url = "/".join(p.split("/")[:-1]) + "/"  # Base URL of the original M3U8 file
+            lines = response.text.splitlines()
+            rewritten_lines = []
+
+            for line in lines:
+                if line.endswith(".m3u8") or line.endswith(".ts") and not line.startswith("#"):
+                    # Rewrite relative URLs to absolute URLs
+                    absolute_url = urljoin(original_base_url, line)
+                    proxied_url = f"/proxy?p={absolute_url}"
+                    rewritten_lines.append(proxied_url)
+                else:
+                    # Retain non-URL lines (e.g., metadata or comments)
+                    rewritten_lines.append(line)
+
+            # Join the rewritten lines to reform the playlist
+            rewritten_playlist = "\n".join(rewritten_lines)
+
+            # Return the rewritten playlist as plain text
+            return PlainTextResponse(
+                content=rewritten_playlist,
+                media_type="application/vnd.apple.mpegurl"
+            )
+
+        # If the requested URL is a TS segment, stream the file
+        elif p.endswith(".ts"):
+            def stream_file():
+                for chunk in response.iter_content(chunk_size=1024 * 1024):  # Stream in 1MB chunks
+                    yield chunk
+
+            return StreamingResponse(
+                stream_file(),
+                media_type="video/mp2t"
+            )
+
+        # For other cases, return a 400 error
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+
+    except requests.exceptions.RequestException as e:
+         raise HTTPException(status_code=500, detail=f"Failed to fetch or process the file: {str(e)}")
 
 @app.get('*')
 async def main():
