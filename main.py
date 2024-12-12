@@ -1,5 +1,6 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query, HTTPException
+from fastapi.responses import Response
 import requests
 import json
 from starlette.middleware import Middleware
@@ -581,6 +582,16 @@ async def main(query:str,pgno:int):
   return ser(query,pgno)
 
 # https://api-consumet-org-two-opal.vercel.app/meta/anilist/advanced-search?query=demon+slayer&page=1&perPage=25&type=ANIME
+
+@app.get("/proxy")
+async def main(p: str = Query(..., description="M3U8 master playlist URL")):
+  
+  # proxy_url = "https://m3u8-proxy-dnuse.amvstr.me/"
+
+  # print(f"{proxy_url}{p}")
+  response = requests.get(f"{p}",headers=headers)
+  return response.text
+
 @app.get('*')
 async def main():
     return "page does not exist"
