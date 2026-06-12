@@ -1,14 +1,17 @@
 
  
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import Response,StreamingResponse
 import requests
 import json
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+import difflib
+from difflib import SequenceMatcher
+# from fastapi.responses import StreamingResponse
 from io import BytesIO
 from urllib.parse import urljoin, urlparse
+import re
 
 middleware = [
     Middleware(
@@ -40,17 +43,74 @@ headers = {
 
 url = 'https://graphql.anilist.co'
 
+
+
+
+def normalize(text):
+    text = text.lower()
+    text = re.sub(r"\(.*?\)", "", text)
+    text = re.sub(r"[^a-z0-9 ]", "", text)
+    return text.strip()
+
+
+def similarity(a, b):
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+def best_match(query, choices):
+    nq = normalize(query)
+    normalized_choices = [normalize(c) for c in choices]
+
+    # 1️ PERFECT match (must win)
+    for i, nc in enumerate(normalized_choices):
+        if nc == nq:
+            return i
+
+    # 2️ Query is a full phrase inside title
+    contains = [
+        i for i, nc in enumerate(normalized_choices)
+        if f" {nq} " in f" {nc} "
+    ]
+    if contains:
+        # pick the SHORTEST title (base anime beats arcs)
+        return min(contains, key=lambda i: len(normalized_choices[i]))
+
+    # 3️ Fallback to similarity
+    return max(
+        range(len(choices)),
+        key=lambda i: similarity(nq, normalized_choices[i])
+    )
+
+
 def ep(title:str,dub:str):
   print(title)
   # u=f'https://dev-amvstrm-api.nyt92.eu.org/api/v1/episode/{title}'
   
-  u=f'https://stream-pied-five.vercel.app/anime/zoro/{title}'
+  u=f'https://stream-pied-five.vercel.app/anime/animesaturn/{title}'
   r=requests.get(u)
  
   k=r.json()
-  id = k.get("results", [{}])[0].get("id")
+  possible=k.get("results",[])
+  # print(possible)
+  candi=[]
+  for each in possible:
+    candi.append(each.get("title"))
+  # print(candi)
+  # return k
+  closest_index = best_match(title, candi)
+  closest_match = candi[closest_index]
+
+
+  # closest_matches = difflib.get_close_matches(title, candi, n=1, cutoff=0.5)
+  # closest_match = closest_matches[0]
+  # index = candi.index(closest_match) 
+  print(closest_index)
+  # return k
+
+
+
+  id = k.get("results", [{}])[closest_index].get("id")
   print(id)
-  for_episodes=f'https://stream-pied-five.vercel.app/anime/zoro/info?id={id}'
+  for_episodes=f'https://stream-pied-five.vercel.app/anime/animesaturn/info?id={id}'
   epi=requests.get(for_episodes)
 #   print(epi)
   epi=epi.json()
@@ -301,9 +361,10 @@ query ($id: Int) { # Define which variables will be used in the query (id)
   
   nam= e['data']['Media']['title']['english']
   s=(ep(nam,dub))
-#   print(s)
+  #   print(s)
   e['data']['Media']["totalepisodes"]=s
-#   print(e['data']['Media'])
+  # e['data']['Media']["totalepisodes"]=[]
+  #   print(e['data']['Media'])
   
   return e
 
@@ -579,8 +640,9 @@ async def main(id:int,dub: str):
 
 
 
+
 @app.get('/watch/{id}/{str}')
-async def main(id:str,str: int):
+async def main(id:str,str: str):
 
 #   https://api.consumet.org/meta/anilist/watch/{episodeId}
   # url=f"https://api-consumet-org-two-opal.vercel.app/meta/anilist/watch/{str}"
@@ -588,9 +650,20 @@ async def main(id:str,str: int):
  
   # url=f"https://march-api1.vercel.app/meta/anilist/watch/{str}"
 #   url=f"https://dev-amvstrm-api.nyt92.eu.org/api/v2/stream/{id}/{str}"
-  url=f'https://stream-pied-five.vercel.app/anime/zoro/watch/{id}'
+  # url=f'https://stream-pied-five.vercel.app/anime/zoro/watch/{id}?dub={str}'
+  if(str=='false'):
+    str="sub"
+  elif (str=='true'):
+    str='dub'
+  url=f'https://yuma-anime-api-rho.vercel.app/watch?episodeId={id}&type={str}'
+  
   r=requests.get(url,headers=headers)
   k=r.json()
+  modified_subtitles = [{"src": item["url"], "label": item["lang"]} for item in k['subtitles']]
+  print(k['subtitles'])
+  k['subtitles']=modified_subtitles
+  
+
   return k
 
 
@@ -698,3 +771,4 @@ async def main():
 
 
 # https://proxy.ashanime.pro/https://www117.anzeat.pro/streamhls/db98de9dcd8c6a5e3fc38ffe06b647ba/ep.3.1722101690.360.m3u8
+
